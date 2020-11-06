@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, FC } from 'react';
 import axios from 'axios';
 import {
   BrowserRouter,
@@ -6,6 +6,7 @@ import {
   Route,
   Redirect,
 } from 'react-router-dom';
+import { AppType, UserType } from 'goldilocksTypes';
 
 // Components
 import { toast } from 'react-toastify';
@@ -20,43 +21,41 @@ import Navbar from './components/global/Navbar';
 import UserProfile from './components/profile/UserProfile';
 import UserCalendar from './components/dashboard/availability/Calendar';
 import Profile from './components/profile/Profile';
+import Swaps from './components/dashboard/swaps/Swaps';
+import Invite from './components/global/Invite';
 
 toast.configure();
-
-type UserType = {
-  dob: string,
-  email: string,
-  first_name: string,
-  guestRating: number,
-  hostRating: number,
-  id: number,
-  inviteCount: number,
-  last_name: string,
-  password: string,
-  profilePhoto: string,
-  pronouns: string,
-  swapCount: number,
-  userBio: string,
-};
 
 const initUser = {
   dob: '1',
   email: '1',
-  first_name: '1',
+  firstName: '1',
   guestRating: 1,
   hostRating: 1,
   id: 1,
   inviteCount: 1,
-  last_name: '1',
+  lastName: '1',
   password: '1',
   profilePhoto: '1',
   pronouns: '1',
   swapCount: 1,
   userBio: '1',
 };
-const App: React.FC = (): JSX.Element => {
-  const [isAuthenticated, setAuth] = useState(true);
+const App: FC = (): JSX.Element => {
+  const [isAuthenticated, setAuth] = useState(false);
   const [testUser, setTestUser] = useState(initUser);
+  const [user, setUser] = useState<AppType>({
+    id: localStorage.userId,
+    firstName: localStorage.firstName,
+    guestRating: localStorage.guestRating,
+    hostRating: localStorage.hostRating,
+    inviteCount: localStorage.inviteCount,
+    profilePhoto: localStorage.profilePhoto,
+    pronouns: localStorage.pronouns,
+    swapCount: localStorage.swapCount,
+    userBio: localStorage.userBio,
+    email: localStorage.email,
+  });
 
   const checkAuth = async () => {
     try {
@@ -66,15 +65,11 @@ const App: React.FC = (): JSX.Element => {
       });
 
       const parseRes = await response.json();
-
-      console.log('web token?', parseRes);
       if (parseRes === true) {
         setAuth(true);
-      } else {
-        setAuth(false);
       }
     } catch (err) {
-      console.error(err.message);
+      console.warn(err.message);
     }
   };
 
@@ -82,10 +77,10 @@ const App: React.FC = (): JSX.Element => {
     checkAuth();
     axios.get('user/')
       .then(({ data }) => {
-        const idk = data.filter((user: UserType) => user.id === 1);
-        setTestUser(idk[0]);
+        const userList = data.filter((tempUser: UserType) => tempUser.id === 1);
+        setTestUser(userList[0]);
       });
-  }, []);
+  }, [user]);
 
   return (
     <BrowserRouter>
@@ -96,7 +91,7 @@ const App: React.FC = (): JSX.Element => {
           strict
           path="/"
           render={() => (!isAuthenticated ? (
-            <Login handleLogin={[isAuthenticated, setAuth]} />) : (
+            <Login handleLogin={[isAuthenticated, setAuth]} setUser={setUser} />) : (
               <Redirect to="/dashboard" />
           ))}
         />
@@ -106,7 +101,7 @@ const App: React.FC = (): JSX.Element => {
           path="/register"
           render={() => (!isAuthenticated ? (
             <SignUp handleLogin={[isAuthenticated, setAuth]} />) : (
-              <Redirect to="/" />
+              <Redirect to="/dashboard" />
           ))}
         />
         {/* // <Redirect to="/dashboard" /> */}
@@ -116,7 +111,7 @@ const App: React.FC = (): JSX.Element => {
           strict
           path="/dashboard"
           render={() => (isAuthenticated ? (
-            <Dashboard handleLogin={[isAuthenticated, setAuth]} />) : (
+            <Dashboard handleLogin={[isAuthenticated, setAuth]} user={user} />) : (
               <Redirect to="/" />
           ))}
         />
@@ -146,13 +141,23 @@ const App: React.FC = (): JSX.Element => {
         />
         <Route
           exact
-          path="/otherProfile"
-          component={() => <Profile />}
+          path="/hostProfile"
+          component={Profile}
         />
         <Route
           exact
           path="/calendar"
           component={() => <UserCalendar user={testUser} />}
+        />
+        <Route
+          exact
+          path="/swaps"
+          component={() => <Swaps user={testUser} />}
+        />
+        <Route
+          exact
+          path="/invite"
+          component={Invite}
         />
       </Switch>
     </BrowserRouter>

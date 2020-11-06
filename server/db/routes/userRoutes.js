@@ -6,7 +6,38 @@ const userRouter = Router();
 userRouter
   .get('/', (req, res) => {
     User.findAll()
-      .then((users) => res.send(users))
+      .then((users) => {
+        const result = users.map((user) => {
+          const {
+            id,
+            pronouns,
+            dob,
+            email,
+            password,
+            swapCount,
+            guestRating,
+            hostRating,
+            inviteCount,
+            userBio,
+          } = user.dataValues;
+          return {
+            id,
+            pronouns,
+            dob,
+            email,
+            password,
+            profilePhoto: user.dataValues.profile_photo,
+            swapCount,
+            guestRating,
+            hostRating,
+            inviteCount,
+            userBio,
+            firstName: user.dataValues.first_name,
+            lastName: user.dataValues.last_name,
+          };
+        });
+        res.send(result);
+      })
       .catch((err) => res.status(500).send(err));
   })
   .get('/email/:address', (req, res) => {
@@ -16,7 +47,34 @@ userRouter
         email: address,
       },
     })
-      .then((user) => res.send(user))
+      .then((response) => {
+        const {
+          id,
+          pronouns,
+          dob,
+          email,
+          swapCount,
+          guestRating,
+          hostRating,
+          inviteCount,
+          userBio,
+        } = response.dataValues;
+        const result = {
+          id,
+          pronouns,
+          dob,
+          email,
+          profilePhoto: response.dataValues.profile_photo,
+          swapCount,
+          guestRating,
+          hostRating,
+          inviteCount,
+          userBio,
+          firstName: response.dataValues.first_name,
+          lastName: response.dataValues.last_name,
+        };
+        res.send(result);
+      })
       .catch((err) => res.status(500).send(err));
   })
   .get('/byId/:id', (req, res) => {
@@ -38,7 +96,36 @@ userRouter.get('/:userId', (req, res) => {
       id: userId,
     },
   })
-    .then((userInfo) => res.send(userInfo))
+    .then(({ dataValues }) => {
+      const {
+        id,
+        pronouns,
+        dob,
+        email,
+        password,
+        swapCount,
+        guestRating,
+        hostRating,
+        inviteCount,
+        userBio,
+      } = dataValues;
+      const result = {
+        id,
+        pronouns,
+        dob,
+        email,
+        password,
+        profilePhoto: dataValues.profile_photo,
+        swapCount,
+        guestRating,
+        hostRating,
+        inviteCount,
+        userBio,
+        firstName: dataValues.first_name,
+        lastName: dataValues.last_name,
+      };
+      res.send(result);
+    })
     .catch((err) => err);
 });
 
@@ -60,7 +147,6 @@ userRouter
   .patch('/bio/:userId', (req, res) => {
     const { userId } = req.params;
     const { newBio } = req.body.params;
-    console.log(req);
     User.update({ userBio: newBio }, {
       where: {
         id: userId,

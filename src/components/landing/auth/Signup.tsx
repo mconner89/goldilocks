@@ -4,18 +4,30 @@ import { toast } from 'react-toastify';
 import axios, { AxiosResponse } from 'axios';
 import { Link, Redirect } from 'react-router-dom';
 import user from '../../../../server/db/Models/user';
-
+import nightbed from '../../../assets/nightbed.jpg';
+import '../../../App.css';
 // Declare the type of data that will be handled in onSubmit function
 type RegisterNewUser = {
   first_name: string;
   last_name: string;
   email: string;
   password: string;
+  verification_code: number;
 };
 
 interface AuthProps {
-  handleLogin: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
+  handleLogin: [boolean, React.Dispatch<React.SetStateAction<boolean>>],
 }
+
+const styles = {
+  header: {
+    backgroundImage: `url(${nightbed})`,
+    height: '100vh',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: 'cover',
+  },
+};
 
 const SignUp: React.FC<AuthProps> = ({ handleLogin: [isAuthenticated, setAuth] }) => {
   const { errors } = useForm<RegisterNewUser>();
@@ -23,13 +35,57 @@ const SignUp: React.FC<AuthProps> = ({ handleLogin: [isAuthenticated, setAuth] }
   const [lastName, setLastName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [fileInputState, setFileInputState] = useState('');
+  const [selectedFile, setSelectedFile] = useState<any>();
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string>('');
+
+  const uploadImage = async (encodedImage: any) => {
+    await axios.get('http://localhost:3000/image/newProfilePicture', {
+      params: {
+        image: encodedImage,
+      },
+    })
+      .then(({ data }) => {
+        setProfilePhotoUrl(data);
+      })
+      .catch((error) => console.warn(error));
+  };
+
+  const getUserProfile = async () => {
+    await axios.get(`user/email/${email}`)
+      .then(({ data }) => {
+        localStorage.setItem('userId', data.id);
+        localStorage.setItem('firstName', data.firstName);
+        localStorage.setItem('pronouns', data.pronouns);
+        localStorage.setItem('email', data.email);
+        localStorage.setItem('profilePhoto', data.profilePhoto);
+        localStorage.setItem('swapCount', data.swapCount);
+        localStorage.setItem('guestRating', data.guestRating);
+        localStorage.setItem('hostRating', data.hostRating);
+        localStorage.setItem('inviteCount', data.inviteCount);
+        localStorage.setItem('userBio', data.userBio);
+      });
+  };
+
+  const handleFileChange = (e: any) => {
+    const image = e.target.files[0];
+    setSelectedFile(image);
+    setFileInputState(e.target.value);
+    const reader = new FileReader();
+    reader.readAsDataURL(image);
+    reader.onloadend = () => {
+      uploadImage(reader.result);
+    };
+    reader.onerror = () => {
+      console.warn('reader experienced an error');
+    };
+  };
 
   const onSubmitForm = async (event: SyntheticEvent) => {
     event.preventDefault();
-    console.log('hello2');
     try {
       const body = {
-        firstName, lastName, email, password,
+        firstName, lastName, email, password, profilePhotoUrl,
       };
       const response = await fetch('http://localhost:3000/auth/register',
         {
@@ -39,25 +95,19 @@ const SignUp: React.FC<AuthProps> = ({ handleLogin: [isAuthenticated, setAuth] }
           },
           body: JSON.stringify(body),
         });
-      console.log('ln 39');
 
       const parseRes = await response.json();
-      console.log('ln 41');
-      console.log(parseRes);
-      // if (parseRes.jwtToken) {
-      //   console.log(parseRes.jwtToken);
-      //   localStorage.setItem('token', parseRes.jwtToken);
-      //   setAuth(true);
-      //   console.log('authed?', isAuthenticated);
-      //   toast.success('Registered successfullly!');
-      // } else {
-      //   setAuth(false);
-      //   toast.error(parseRes);
-      // }
-      setAuth(true);
-      toast.success('Registered successfully!');
+      if (parseRes.jwtToken) {
+        localStorage.setItem('token', parseRes.jwtToken);
+        await getUserProfile();
+        setAuth(true);
+        toast.success('Registered successfullly!');
+      } else {
+        setAuth(false);
+        toast.error(parseRes);
+      }
     } catch (err) {
-      console.error(err.message);
+      console.warn(err.message);
     }
   };
 
@@ -135,6 +185,15 @@ const SignUp: React.FC<AuthProps> = ({ handleLogin: [isAuthenticated, setAuth] }
             {errors.name && <div className="error">Enter a valid verfication code</div>}
           </label> */}
             {/* </div> */}
+            <div className="form-group align-center">
+              <input
+                id="imageInput"
+                type="file"
+                name="image"
+                onChange={(e) => handleFileChange(e)}
+                value={fileInputState}
+              />
+            </div>
             <div className="form-group align-center">
               <button
                 className="btn btn-success btn-block"

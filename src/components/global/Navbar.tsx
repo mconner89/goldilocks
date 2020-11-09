@@ -1,16 +1,15 @@
 import React, { SyntheticEvent, useState } from 'react';
 import {
-  makeStyles, Typography, AppBar, Toolbar, Button, MenuItem, Menu, IconButton, Avatar,
+  makeStyles, Typography, AppBar, Toolbar, Button, MenuItem, Menu, IconButton, Avatar, Switch,
 } from '@material-ui/core';
+import SearchIcon from '@material-ui/icons/Search';
 import MenuIcon from '@material-ui/icons/Menu';
 import { Link } from 'react-router-dom';
 
 const useStyles = makeStyles({
   root: {
     flexGrow: 1,
-  },
-  title: {
-    flexGrow: 1,
+    background: '#4E3977',
   },
   avatar: {
     marginLeft: '7px',
@@ -18,10 +17,13 @@ const useStyles = makeStyles({
 });
 
 interface AuthProps {
-  handleLogin: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
+  handleLogin: [boolean, React.Dispatch<React.SetStateAction<boolean>>],
+  toggleMode: [boolean, React.Dispatch<React.SetStateAction<boolean>>]
 }
 
-const Navbar: React.FC<AuthProps> = ({ handleLogin: [isAuthenticated, setAuth] }): JSX.Element => {
+const Navbar: React.FC<AuthProps> = ({
+  handleLogin: [isAuth, setAuth], toggleMode: [darkMode, setDarkMode],
+}):JSX.Element => {
   const classes = useStyles();
   const [isUserAuthenticated, setIsAuthenticated] = useState(false);
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
@@ -40,15 +42,25 @@ const Navbar: React.FC<AuthProps> = ({ handleLogin: [isAuthenticated, setAuth] }
     setAuth(false);
   };
 
+  // TODO: give the dark mode toggle a label; reformat nav bar -- formgroup?}
+
   return (
-    <div className={classes.root}>
-      <AppBar position="static">
+    <div className="toggle-container">
+      <AppBar className={classes.root} position="static">
         <Toolbar variant="dense">
           <Typography component={Link} to="/dashboard" variant="h3" color="inherit">
             🛏
           </Typography>
           <Button component={Link} to="/" color="inherit">HOME</Button>
-          <Button component={Link} to="/search" color="inherit" className={classes.title}>SEARCH</Button>
+          <IconButton component={Link} to="/search" color="inherit">
+            <SearchIcon />
+          </IconButton>
+          <Switch
+            checked={darkMode}
+            onChange={() => setDarkMode((prevMode: boolean) => !prevMode)}
+            name="toggleMode"
+            inputProps={{ 'aria-label': 'toggle between light and dark mode' }}
+          />
           <IconButton
             aria-controls="customized-menu"
             aria-haspopup="true"
@@ -76,6 +88,9 @@ const Navbar: React.FC<AuthProps> = ({ handleLogin: [isAuthenticated, setAuth] }
             <MenuItem component={Link} to="/profile" color="inherit" onClick={handleClose}>
               Profile
             </MenuItem>
+            <MenuItem component={Link} to="/messages" color="inherit" onClick={handleClose}>
+              Messages
+            </MenuItem>
             <MenuItem>
               Manage Listing
             </MenuItem>
@@ -84,6 +99,9 @@ const Navbar: React.FC<AuthProps> = ({ handleLogin: [isAuthenticated, setAuth] }
             </MenuItem>
             <MenuItem component={Link} to="/calendar" color="inherit" onClick={handleClose}>
               Set availability
+            </MenuItem>
+            <MenuItem component={Link} to="/bulletins" color="inherit" onClick={handleClose}>
+              Bulletin board
             </MenuItem>
             <MenuItem component={Link} to="/invite" color="inherit" onClick={handleClose}>
               Invite friends

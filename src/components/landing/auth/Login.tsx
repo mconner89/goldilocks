@@ -3,29 +3,15 @@ import axios from 'axios';
 import { useForm } from 'react-hook-form';
 import { AppType } from 'goldilocksTypes';
 import { toast } from 'react-toastify';
-import nightbed from '../../../assets/nightbed.jpg';
+import LoginExistingUser from './ts-utils/types';
 import '../../../App.css';
-
-// Declare the type of data that will be handled in onSubmit function
-type LoginExistingUser = {
-  email: string;
-  password: string;
-};
 
 interface AuthProps {
   handleLogin: [boolean, React.Dispatch<React.SetStateAction<boolean>>],
   setUser: React.Dispatch<React.SetStateAction<AppType>>,
 }
-const styles = {
-  header: {
-    backgroundImage: `url(${nightbed})`,
-    height: '100vh',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
-    backgroundSize: 'cover',
-  },
-};
-const Login: React.FC<AuthProps> = ({ handleLogin: [isAuthenticated, setAuth], setUser }) => {
+
+const Login: React.FC<AuthProps> = ({ handleLogin: [isAuth, setAuth], setUser }) => {
   const { errors } = useForm<LoginExistingUser>();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -70,11 +56,10 @@ const Login: React.FC<AuthProps> = ({ handleLogin: [isAuthenticated, setAuth], s
     event.preventDefault();
     try {
       const body = { email, password };
-      const response = await fetch('http://localhost:3000/auth/login', {
+      const response = await fetch(`http://${process.env.REACT_APP_HOST}:${process.env.REACT_APP_PORT}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Accept: 'application/json,text/plain, */*',
         },
         body: JSON.stringify(body),
       })
@@ -97,7 +82,7 @@ const Login: React.FC<AuthProps> = ({ handleLogin: [isAuthenticated, setAuth], s
   };
 
   return (
-    <div className="login-container" style={styles.header}>
+    <div className="login-container">
       <h1 className="text-center my-5">Login</h1>
       <div className="row justify-content-center">
         <form>

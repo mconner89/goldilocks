@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define(
-    "user",
+    'user',
     {
       id: {
         type: DataTypes.INTEGER,
@@ -22,6 +22,12 @@ module.exports = (sequelize, DataTypes) => {
     },
     { timestamps: false },
   );
+
+  User.associate = (models) => {
+    User.hasMany(models.Thread);
+    User.hasMany(models.Message);
+    User.hasMany(models.Bulletin);
+  };
 
   return User;
 };

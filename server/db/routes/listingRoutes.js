@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const Sequelize = require('sequelize');
+const axios = require('axios');
 
 const {
   User,
@@ -9,6 +10,7 @@ const {
   Listing,
   Invite,
   Availability,
+  Geolocation,
   models,
 } = require('../index');
 
@@ -68,27 +70,42 @@ listingRouter
       .catch((err) => res.status(500).send(err));
   });
 
+// TEST
+listingRouter.get('/geocode', (req, res) => {
+  Geolocation.findAll({
+
+  })
+    .then((listingGeo) => res.send(listingGeo))
+    .catch((err) => res.send(err.message));
+});
+
 listingRouter
   .post('/', (req, res) => {
     const {
       listingAddress, listingCity, listingState, listingZipCode, listingTitle,
-      listingDescription, pets, ada, smoking, roommates, internet, privateBath,
+      listingDescription, pets, ada, smoking, roommates, internet, privateBath, userId,
     } = req.body;
-    Listing.create({
-      listingAddress,
-      listingCity,
-      listingState,
-      listingZipCode,
-      listingTitle,
-      listingDescription,
-      pets,
-      ada,
-      smoking,
-      roommates,
-      internet,
-      privateBath,
-    })
-      .then(() => res.status(201).send('created!'))
+    const listingLocation = `${listingAddress} ${listingCity} ${listingState}`;
+    axios.get(`http://${process.env.HOST}:${process.env.PORT}/map/listing/geocode/${listingLocation}`)
+      .then((geocoded => {
+        Listing.create({
+          userId,
+          listingAddress,
+          listingCity,
+          listingState,
+          listingZipCode,
+          listingTitle,
+          listingDescription,
+          pets,
+          ada,
+          smoking,
+          roommates,
+          internet,
+          privateBath,
+          latitude: geocoded.data[1],
+          longitude: geocoded.data[0],
+        })
+      }))
       .catch((err) => res.send(err));
   });
 

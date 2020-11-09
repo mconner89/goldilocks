@@ -13,7 +13,7 @@ interface AuthProps {
 }
 
 const Dashboard: React.FC<AuthProps> = ({
-  handleLogin: [isAuthenticated, setAuth],
+  handleLogin: [isAuth, setAuth],
   user,
 }) => {
   const listingId = 1;
@@ -39,6 +39,7 @@ const Dashboard: React.FC<AuthProps> = ({
   const [roommates, setRoommates] = useState(false);
   const [internet, setInternet] = useState(false);
   const [privateBath, setPrivateBath] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState('');
 
   const handleTextChange = (
     e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>,
@@ -47,15 +48,19 @@ const Dashboard: React.FC<AuthProps> = ({
     if (string === 'listingDescription') {
       setListingDescription(e.target.value);
     } else if (string === 'listingAddress') {
-      setListingAddress(e.target.value);
+      setListingAddress((e.target.value).toLowerCase());
     } else if (string === 'listingCity') {
-      setListingCity(e.target.value);
+      setListingCity((e.target.value).toLowerCase());
     } else if (string === 'listingState') {
-      setListingState(e.target.value);
+      setListingState((e.target.value).toLowerCase());
     } else if (string === 'listingZipCode') {
       setListingZipCode(e.target.value);
     } else if (string === 'listingTitle') {
       setListingTitle(e.target.value);
+    } else if (string === 'listingPhoto') {
+      const target = e.target as HTMLInputElement;
+      const file: File = (target.files as FileList)[0];
+      console.log(file);
     }
   };
 
@@ -65,6 +70,22 @@ const Dashboard: React.FC<AuthProps> = ({
 
   const handleClose = (i: React.MouseEvent<HTMLButtonElement, MouseEvent>, check: boolean) => {
     if (check) {
+      axios.post('/listing', {
+        listingAddress,
+        listingCity,
+        listingState,
+        listingZipCode,
+        listingTitle,
+        listingDescription,
+        pets,
+        ada,
+        smoking,
+        roommates,
+        internet,
+        privateBath,
+        userId,
+        photoUrl,
+      });
       // save changes to DB
       // update field on screen
     }
@@ -93,12 +114,14 @@ const Dashboard: React.FC<AuthProps> = ({
 
   const getProfile = async () => {
     try {
-      const res = await fetch('http://localhost:3000/dashboard', {
+      const res = await fetch(`http://${process.env.HOST}:${process.env.PORT}/dashboard`, {
         method: 'POST',
         headers: { jwt_token: localStorage.token, email: user.email },
       });
       const parseData = await res.json();
       setAuth(true);
+      setUserEmail(parseData.email);
+      setUserName(parseData.first_name);
     } catch (err) {
       console.warn(err.message);
     }
@@ -133,6 +156,17 @@ const Dashboard: React.FC<AuthProps> = ({
     setShownIndex(getRandomAvlb());
   };
 
+  const postUserInfo = () => {
+    axios.post('/dashboard', {
+      params: {
+        userEmail,
+      },
+    })
+      .then((results) => {
+        const { data } = results;
+        console.warn('hit post User info');
+      });
+  };
   const getDashboardInfo = () => {
     axios.get('/dashboardInfo', {
       params: {

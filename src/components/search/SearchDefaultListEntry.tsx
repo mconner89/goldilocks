@@ -1,5 +1,9 @@
 import React from 'react';
 import { createStyles, Theme, makeStyles } from '@material-ui/core/styles';
+import ButtonBase from '@material-ui/core/ButtonBase';
+import Grid from '@material-ui/core/Grid';
+import Typography from '@material-ui/core/Typography';
+import { Link } from 'react-router-dom';
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   root: {
@@ -11,26 +15,63 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
   inline: {
     display: 'inline',
   },
+  image: {
+    width: '240px',
+    height: '128px',
+    margin: 'auto',
+    overflow: 'hidden',
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  img: {
+    margin: 'auto',
+    display: 'block',
+    position: 'absolute',
+    'object-fit': 'cover',
+    width: '100%',
+    height: '100%',
+  },
 }));
 
 interface DefaultListProps {
   listingId: number;
   user: number;
   title: string;
-  location: [string, string];
-  avail: [];
+  city: string;
+  state: string;
+  avail: Date;
+  photo: string;
+  matchPercentage: number;
 }
 
 const DefaultListEntry: React.FC<DefaultListProps> = ({
-  listingId, user, title, location, avail,
+  listingId, user, title, city, state, avail, photo, matchPercentage,
 }) => {
   const classes = useStyles();
+  const location = `${city}, ${state}`;
+  const availMessage = `available ${avail}`;
+  const matchMsg = `${matchPercentage}% match`;
 
   return (
     <div className={classes.root}>
-      {title}
-      {location}
-      {avail}
+      <ButtonBase className={classes.image} component={Link} to={`/view-listing/${user}`}>
+        <img className={classes.img} alt="complex" src={photo} />
+      </ButtonBase>
+      <Grid item xs component={Link} to={`/view-listing/${user}`}>
+        <Typography variant="h6">
+          {title}
+        </Typography>
+        <Typography variant="subtitle1">
+          {location}
+        </Typography>
+      </Grid>
+      <Typography variant="overline" display="block">
+        {availMessage}
+      </Typography>
+      <Typography variant="overline" display="block">
+        {matchMsg}
+      </Typography>
     </div>
   );
 };

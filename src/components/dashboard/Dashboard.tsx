@@ -1,9 +1,14 @@
 import React, { useState, useEffect, SyntheticEvent } from 'react';
 import axios from 'axios';
-import { createGenerateClassName, Button } from '@material-ui/core';
+import {
+  Button,
+  Container,
+  Grid,
+} from '@material-ui/core';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AppType } from 'goldilocksTypes';
+import { Link } from 'react-router-dom';
 import Navbar from '../global/Navbar';
 import ListingModal from '../listing/ListingModal';
 
@@ -16,12 +21,12 @@ const Dashboard: React.FC<AuthProps> = ({
   handleLogin: [isAuth, setAuth],
   user,
 }) => {
-  const listingId = 1;
+  // const listingId = 1;
   const [randomListings, setRandomListings] = useState<any>([]);
   const [shownIndex, setShownIndex] = useState(0);
   const [swapCount, setSwapCount] = useState(0);
   const [pendingRequestCount, setPendingRequestCount] = useState(0);
-
+  const [randomLink, setRandomLink] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [userName, setUserName] = useState('');
   const [userId, setUserId] = useState(user.id);
@@ -41,6 +46,35 @@ const Dashboard: React.FC<AuthProps> = ({
   const [privateBath, setPrivateBath] = useState(false);
   const [photoUrl, setPhotoUrl] = useState('');
 
+  const getRandomAvlb = () => {
+    const len = randomListings.length;
+    return Math.floor(Math.random() * len);
+  };
+
+  const getDashboardInfo = () => {
+    axios.get('/dashboardInfo', {
+      params: {
+        userId: localStorage.userId,
+      },
+    })
+      .then(({ data }) => {
+        const {
+          confirmedSwapCount,
+          pendingRequests,
+          openAvailabilities,
+        } = data;
+        setSwapCount(confirmedSwapCount);
+        setPendingRequestCount(pendingRequests.count);
+        setRandomListings(openAvailabilities);
+        const i = 0;
+        setShownIndex(i);
+        if (randomListings.length) {
+          const { id, listingId } = randomListings[shownIndex];
+          setRandomLink(`${listingId}/${id}`);
+        }
+      });
+  };
+
   const handleTextChange = (
     e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>,
     string: string,
@@ -57,10 +91,6 @@ const Dashboard: React.FC<AuthProps> = ({
       setListingZipCode(e.target.value);
     } else if (string === 'listingTitle') {
       setListingTitle(e.target.value);
-    } else if (string === 'listingPhoto') {
-      const target = e.target as HTMLInputElement;
-      const file: File = (target.files as FileList)[0];
-      console.log(file);
     }
   };
 
@@ -85,7 +115,12 @@ const Dashboard: React.FC<AuthProps> = ({
         privateBath,
         userId,
         photoUrl,
-      });
+      })
+        .then(() => {
+          getDashboardInfo();
+          setHasListing(true);
+        })
+        .catch((err) => console.warn(err));
       // save changes to DB
       // update field on screen
     }
@@ -147,13 +182,11 @@ const Dashboard: React.FC<AuthProps> = ({
     }
   };
 
-  const getRandomAvlb = () => {
-    const len = randomListings.length;
-    return Math.floor(Math.random() * len);
-  };
-
   const getNewListing = () => {
     setShownIndex(getRandomAvlb());
+    // setRandomLink(randomListings[shownIndex].listingId);
+    const { id, listingId } = randomListings[shownIndex];
+    setRandomLink(`${listingId}/${id}`);
   };
 
   const postUserInfo = () => {
@@ -167,21 +200,6 @@ const Dashboard: React.FC<AuthProps> = ({
         console.warn('hit post User info');
       });
   };
-  const getDashboardInfo = () => {
-    axios.get('/dashboardInfo', {
-      params: {
-        userId,
-        listingId,
-      },
-    })
-      .then((results) => {
-        const { data } = results;
-        setSwapCount(data.confirmedSwapCount);
-        setPendingRequestCount(data.pendingRequests.count);
-        setRandomListings(data.openAvailabilities);
-        setShownIndex(getRandomAvlb());
-      });
-  };
 
   useEffect(() => {
     getDashboardInfo();
@@ -193,82 +211,73 @@ const Dashboard: React.FC<AuthProps> = ({
   const listingCheck = () => {
     if (hasListing) {
       return (
-        <div id="random-listing">
+        <Grid id="random-listing">
           <p>Need a weekend getaway?</p>
           {
             randomListings.length > 0
             && (
-              <div>
+              <Grid>
                 <p>
-                  {randomListings[shownIndex].hostName}
-                  {' '}
-                  has a room open in
-                  {' '}
-                  {randomListings[shownIndex].city}
+                  {`${randomListings[shownIndex].hostName} has a room open in ${randomListings[shownIndex].city}`}
                 </p>
                 <p>
-                  {randomListings[shownIndex].startDate}
-                  {' to '}
-                  {randomListings[shownIndex].endDate}
+                  {`${randomListings[shownIndex].startDate} to ${randomListings[shownIndex].endDate}`}
                 </p>
-              </div>
+              </Grid>
             )
           }
-          <button type="submit">View Listing!</button>
+          <Link to={`/view-listing/${randomLink}`}>
+            <Button type="button">
+              View Listing!
+            </Button>
+          </Link>
           <button type="submit" onClick={getNewListing}>Show me another!</button>
-        </div>
+        </Grid>
       );
     }
     return (
-      <div>
-        It looks like you don&apos;t have a listing yet. Lets fix that!
-        <Button onClick={handleOpen}>
-          Create Listing
-        </Button>
-        <ListingModal
-          handleClose={handleClose}
-          handleClickOff={handleClickOff}
-          handleTextChange={handleTextChange}
-          toggleSwitch={toggleSwitch}
-          open={open}
-        />
-      </div>
+      <>
+        <Grid>
+          It looks like you don&apos;t have a listing yet.
+        </Grid>
+        <Grid>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleOpen}
+          >
+            Let&apos;s fix that!
+          </Button>
+          <ListingModal
+            handleClose={handleClose}
+            handleClickOff={handleClickOff}
+            handleTextChange={handleTextChange}
+            toggleSwitch={toggleSwitch}
+            setPhotoUrl={setPhotoUrl}
+            open={open}
+          />
+        </Grid>
+      </>
     );
   };
 
   return (
-    <>
-      <h4>
-        Hello,
-        {' '}
-        {user.firstName}
-        !!
-      </h4>
-      <div id="user-notifications">
+    <Container>
+      <Grid>
+        <h4>
+          {`Hello, ${user.firstName}!!`}
+        </h4>
+      </Grid>
+      <Grid id="user-notifications">
         <p>
-          You have
-          {' '}
-          {swapCount}
-          {' '}
-          upcoming trips.
+          {`You have ${swapCount} upcoming trips`}
         </p>
         <p>
-          You have
-          {' '}
-          {pendingRequestCount}
-          {' '}
-          requests to swap rooms
+          {`You have ${pendingRequestCount} requests to swap rooms`}
         </p>
-      </div>
+      </Grid>
       {listingCheck()}
-      <button
-        className="btn btn-success btn-block"
-        type="submit"
-        onClick={(e) => logout(e)}
-      >
-        Logout
-      </button>
-    </>
+    </Container>
   );
 };
 

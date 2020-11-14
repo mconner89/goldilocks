@@ -1,11 +1,16 @@
 import React, { FC, useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-  Grid, makeStyles, TextField, FormControl, InputAdornment,
-  InputLabel, Input, IconButton, Container,
+  Grid,
+  makeStyles,
+  FormControl,
+  InputAdornment,
+  Input,
+  IconButton,
+  Container,
 } from '@material-ui/core';
 import SendIcon from '@material-ui/icons/Send';
-import { AppInterface } from 'goldilocksTypes';
+import { MessageProps } from 'goldilocksTypes';
 import ThreadList from './ThreadList';
 import MessageList from './MessageList';
 
@@ -28,7 +33,7 @@ const useStyles = makeStyles({
   },
   scrollStyle: {
     overflow: 'auto',
-    maxHeight: '90%',
+    maxHeight: '85%',
     display: 'flex',
     flexDirection: 'column-reverse',
   },
@@ -44,20 +49,42 @@ const useStyles = makeStyles({
     minHeight: '10%',
     borderStyle: 'solid none none none',
   },
+  currentThreadStyle: {
+    width: '100%',
+    maxHeight: '5%',
+    minHeight: '5%',
+    borderStyle: 'none none solid none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
 
-const Messages: FC<AppInterface> = ({ user }): JSX.Element => {
+const Messages: FC<MessageProps> = (props): JSX.Element => {
+  const { user } = props;
   const classes = useStyles();
   const [threads, setThreads] = useState([]);
   const [activeThread, setActiveThread] = useState(0);
   const [newMessage, setNewMessage] = useState('');
+  const [name, setName] = useState('');
 
-  useEffect(() => {
-    axios.get(`message/getThreads/${user.id}`)
+  const onLoad = async () => {
+    const params = { thread: activeThread, userId: user.id };
+    await axios.get(`/message/getThreads/${user.id}`)
       .then(({ data }) => {
         setThreads(data);
         setActiveThread(data[0]);
-      });
+        const num = data[0];
+        params.thread = num;
+      })
+      .catch((err) => console.warn(err.message));
+    await axios.get('message/getName/', { params })
+      .then(({ data }) => setName(data))
+      .catch((err) => console.warn(err.message));
+  };
+
+  useEffect(() => {
+    onLoad();
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
@@ -70,7 +97,7 @@ const Messages: FC<AppInterface> = ({ user }): JSX.Element => {
       newMessage,
       userId: user.id,
     };
-    axios.post('message/newMessage', { params });
+    axios.post('/message/newMessage', { params });
     setNewMessage('');
   };
 
@@ -82,9 +109,17 @@ const Messages: FC<AppInterface> = ({ user }): JSX.Element => {
           xs={3}
           className={classes.rightBorder}
         >
-          <ThreadList threads={threads} setActiveThread={setActiveThread} userId={user.id} />
+          <ThreadList
+            threads={threads}
+            setActiveThread={setActiveThread}
+            setName={setName}
+            userId={user.id}
+          />
         </Grid>
         <Grid item xs={9} className={classes.messageListStyle}>
+          <Grid className={classes.currentThreadStyle}>
+            {`Your message history with ${name}`}
+          </Grid>
           <Grid className={classes.scrollStyle}>
             <Grid>
               <MessageList thread={activeThread} userId={user.id} />

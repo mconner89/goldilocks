@@ -1,7 +1,12 @@
-import React, { FunctionComponent, useState, useEffect } from 'react';
+import React, { FC, useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-  Grid, Container, Box, Button, makeStyles, IconButton,
+  Grid,
+  Container,
+  Box,
+  Button,
+  makeStyles,
+  IconButton,
 } from '@material-ui/core';
 import EditIcon from '@material-ui/icons/Edit';
 import { AppInterface } from 'goldilocksTypes';
@@ -52,10 +57,15 @@ const useStyles = makeStyles({
     bottom: '0',
     right: '0',
   },
+  contStyle: {
+    textAlign: 'center',
+  },
+  botMargStyle: {
+    marginBottom: '10px',
+  },
 });
 
-// eslint-disable-next-line max-len
-const UserProfileInfo: FunctionComponent<AppInterface> = ({ user }): JSX.Element => {
+const UserProfileInfo: FC<AppInterface> = ({ user }): JSX.Element => {
   const classes = useStyles();
   const [open, setOpen] = useState(false);
   const [bio, setBio] = useState(user.userBio);
@@ -92,9 +102,7 @@ const UserProfileInfo: FunctionComponent<AppInterface> = ({ user }): JSX.Element
 
   const handleClose = (i: React.MouseEvent<HTMLButtonElement, MouseEvent>, check: boolean) => {
     if (check) {
-      // save changes to DB
       axios.patch(`user/bio/${user.id}`, { params: { newBio: tempBio } });
-      // update field on screen
       setBio(tempBio);
     }
     setOpen(false);
@@ -111,26 +119,34 @@ const UserProfileInfo: FunctionComponent<AppInterface> = ({ user }): JSX.Element
   const listingCheck = () => {
     if (!hasListing) {
       return (
-        <>
-          <Grid>
-            It looks like you haven&apos;t made a listing one.
+        <Container className={classes.contStyle}>
+          <Grid className={classes.botMargStyle}>
+            It looks like you haven&apos;t made a listing yet.
           </Grid>
-          <Button>
+          <Button
+            variant="contained"
+            color="primary"
+            className={classes.botMargStyle}
+          >
             Create a listing
           </Button>
-        </>
+        </Container>
       );
     }
     if (!listingPhoto) {
       return (
-        <>
-          <Grid>
+        <Container className={classes.contStyle}>
+          <Grid className={classes.botMargStyle}>
             It looks like there aren&apos;t any photos of your place yet.
           </Grid>
-          <Button>
+          <Button
+            variant="contained"
+            color="primary"
+            className={classes.botMargStyle}
+          >
             Upload a photo
           </Button>
-        </>
+        </Container>
       );
     }
     return (

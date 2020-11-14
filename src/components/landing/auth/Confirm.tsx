@@ -5,28 +5,29 @@ import {
 } from '@material-ui/core';
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 import { toast } from 'react-toastify';
+import { TestProps } from 'goldilocksTypes';
 
-interface TestProps {
-  firstName: string,
-  lastName: string,
-  pronouns: string,
-  dob: string,
-  email: string,
-  password: string,
-  q1: string,
-  q2: string,
-  q3: string,
-  q4: string,
-  q5: string,
-  q6: string,
-  q7: string,
-  q8: string,
-  q9: string,
-  q10: string,
-  nextStep: () => void,
-  prevStep: () => void,
-  onSubmitForm: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void,
-}
+// interface TestProps {
+//   firstName: string,
+//   lastName: string,
+//   pronouns: string,
+//   dob: string,
+//   email: string,
+//   password: string,
+//   q1: string,
+//   q2: string,
+//   q3: string,
+//   q4: string,
+//   q5: string,
+//   q6: string,
+//   q7: string,
+//   q8: string,
+//   q9: string,
+//   q10: string,
+//   nextStep: () => void,
+//   prevStep: () => void,
+//   onSubmitForm: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void,
+// }
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   root: {
@@ -59,6 +60,7 @@ const Confirm: React.FC<TestProps> = (Props): JSX.Element => {
     q8,
     q9,
     q10,
+    profilePhotoUrl,
   } = Props;
 
   const getUserProfile = async () => {
@@ -81,9 +83,27 @@ const Confirm: React.FC<TestProps> = (Props): JSX.Element => {
     event.preventDefault();
     try {
       const body = {
-        firstName, lastName, pronouns, email, password, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10,
+        firstName,
+        lastName,
+        pronouns,
+        email,
+        password,
+        profilePhotoUrl,
+        q1,
+        q2,
+        q3,
+        q4,
+        q5,
+        q6,
+        q7,
+        q8,
+        q9,
+        q10,
       };
-      const response = await fetch(`http://${process.env.REACT_APP_HOST}:${process.env.REACT_APP_PORT}/auth/register`,
+      const rh = process.env.REACT_APP_HOST;
+      const rp = process.env.REACT_APP_PORT;
+
+      const response = await fetch(`http://${rh}:${rp}/auth/register`,
         {
           method: 'POST',
           headers: {
@@ -203,6 +223,12 @@ const Confirm: React.FC<TestProps> = (Props): JSX.Element => {
                   <ListItemText
                     primary="Do you have any allergies, food restrictions or require ADA accommodations?"
                     secondary={q10}
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemText
+                    primary="Photo URL shows up here, yeah"
+                    secondary={profilePhotoUrl}
                   />
                 </ListItem>
               </List>

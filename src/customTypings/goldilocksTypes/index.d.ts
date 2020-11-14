@@ -33,7 +33,13 @@ declare module 'goldilocksTypes' {
   };
 
   interface ProfileProps {
-    location: LocationProps
+    location: LocationProps,
+    user: AppType,
+  }
+
+  interface MessageProps {
+    location?: LocationProps,
+    user: AppType,
   }
 
   interface LocationProps {
@@ -41,7 +47,8 @@ declare module 'goldilocksTypes' {
   }
 
   interface StateProps {
-    hostData: UserType
+    hostData: UserType,
+    userId: string,
   }
 
   interface AppProps {
@@ -59,6 +66,11 @@ declare module 'goldilocksTypes' {
     pronouns: localStorage,
     swapCount: localStorage,
     userBio: localStorage,
+    openness: localStorage,
+    conscientiousness: localStorage,
+    extraversion: localStorage,
+    agreeableness: localStorage,
+    neuroticism: localStorage,
   };
 
   interface AppInterface {
@@ -86,6 +98,8 @@ declare module 'goldilocksTypes' {
     q8: string,
     q9: string,
     q10: string,
+    profilePhotoUrl: string,
+    setProfilePhotoUrl: React.Dispatch<React.SetStateAction<string>>,
     onSubmitForm: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void
   }
 
@@ -109,6 +123,82 @@ declare module 'goldilocksTypes' {
     prevStep: () => void,
   }
 
+  interface TestProps {
+    firstName: string,
+    lastName: string,
+    pronouns: string,
+    dob: string,
+    email: string,
+    password: string,
+    profilePhotoUrl: string,
+    q1: string,
+    q2: string,
+    q3: string,
+    q4: string,
+    q5: string,
+    q6: string,
+    q7: string,
+    q8: string,
+    q9: string,
+    q10: string,
+    nextStep: () => void,
+    prevStep: () => void,
+    onSubmitForm: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void,
+  }
+
+  interface MyProps {
+    firstName: string,
+    lastName: string,
+    pronouns: string,
+    dob: string,
+    email: string,
+    password: string,
+    nextStep: () => void,
+    handleChange: (
+      e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>,
+      type: string
+    ) => void,
+  }
+
+  type HostDataType = {
+    firstName: string,
+    lastName: string,
+    pronouns: string,
+    hostRating: number,
+    id: number,
+    profilePhoto: string,
+    userBio: string,
+  };
+
+  interface ProfileSidebarInterface {
+    host: HostDataType,
+    userId: string,
+  }
+
+  interface HostInfoInterface {
+    hostId: string,
+    userId: string,
+    avbId: number,
+    dates: { startAvail: string, endAvail: string },
+  }
+
+  interface ProfileInfoInterface {
+    host: HostDataType
+  }
+
+  interface SwapListEntryInterface {
+    swap: Availability,
+    guestId: number,
+    type: string,
+  }
+
+  interface ListingLocationState {
+    listingAvail: { startAvail: string, endAvail: string },
+  }
+
+  interface ListingLocationInterface {
+    state: ListingLocationState,
+  }
 }
 
 module.exports = {
@@ -121,4 +211,13 @@ module.exports = {
   RegisterNewUser,
   ConfirmSignupProps,
   CalendarInterface,
+  TestProps,
+  MyProps,
+  MessageProps,
+  HostDataType,
+  ProfileSidebarInterface,
+  HostInfoInterface,
+  ProfileInfoInterface,
+  SwapListEntryInterface,
+  ListingLocationInterface,
 };

@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios, { AxiosResponse } from 'axios';
-import GridList from '@material-ui/core/GridList';
-import GridListTile from '@material-ui/core/GridListTile';
+import axios from 'axios';
 import { createStyles, Theme, makeStyles } from '@material-ui/core/styles';
-
+import Grid from '@material-ui/core/Grid';
 import ResultsListEntry from './SearchResultsListEntry';
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
@@ -14,74 +12,88 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     overflow: 'hidden',
     backgroundColor: theme.palette.background.paper,
   },
-  gridList: {
-    flexWrap: 'nowrap',
-  },
-  inline: {
-    display: 'inline',
+  paper: {
+    padding: theme.spacing(2),
+    margin: 'auto',
   },
 }));
 
 interface SearchProps {
-  dateRange: any
+  dateRange: { start: string, end: string }
   locationQuery: string
-  handleUpdate: [boolean, React.Dispatch<React.SetStateAction<boolean>>]
-  handleAvailListings: [[], React.Dispatch<React.SetStateAction<[]>>]
+  handleAvailListings: [[], React.Dispatch<any>]
 }
 
 const ResultsList: React.FC<SearchProps> = ({
-  dateRange, locationQuery, handleUpdate: [updated, setUpdated],
-  handleAvailListings: [availListings, setAvailListings],
+  dateRange, locationQuery, handleAvailListings: [availListings, setAvailListings],
 }) => {
   const classes = useStyles();
   const [message, setMessage] = useState('');
 
-  const getAvailListingInfo = (listingIds: any) => {
-    const availListingsHolder = [] as any;
-    const listingIdsToLookup = Object.keys(listingIds);
-    listingIdsToLookup.map((id: any) => axios.get(`/listing/fullSearch/${id}/${locationQuery}`)
-      .then((listingInfo) => {
-        const listingWithAvail = listingInfo.data;
-        if (!listingWithAvail) {
-          setMessage('sorry :/ nothing is avail here.');
-          setAvailListings([]);
-        } else {
-          listingWithAvail.startAvail = listingIds[id].startDate;
-          listingWithAvail.endAvail = listingIds[id].endDate;
-          availListingsHolder.push(listingWithAvail);
-        }
-      })
-      .then(() => {
-        if (availListingsHolder.length === listingIdsToLookup.length) {
-          setMessage('');
-          setAvailListings(availListingsHolder);
-        }
-      })
-      .catch((err) => err));
+  const getMatchPerc = (scale: any) => {
+    const userScale = {
+      o: localStorage.openness,
+      c: localStorage.conscientiousness,
+      e: localStorage.extraversion,
+      a: localStorage.agreeableness,
+      n: localStorage.neuroticism,
+    };
+    const diff1 = Math.abs(scale.openness - userScale.o);
+    const diff2 = Math.abs(scale.conscientiousness - userScale.c);
+    const diff3 = Math.abs(scale.extraversion - userScale.e);
+    const diff4 = Math.abs(scale.agreeableness - userScale.a);
+    const diff5 = Math.abs(scale.neuroticism - userScale.n);
+    const totalDiff = diff1 + diff2 + diff3 + diff4 + diff5;
+    const percentage = Math.round(((5 - totalDiff) / 5) * 100);
+    return percentage;
   };
 
-  const getAvailListings = () => {
+  const getAvailListingInfo = async (listingIds: any) => {
+    const listingIdsToLookup = Object.keys(listingIds);
+    const getAvlbListings = async () => Promise.all(
+      listingIdsToLookup.map((id: any) => axios.get(`/listing/fullSearch/${id}/${locationQuery}`)
+        .then((listingInfo) => {
+          const newObj = { ...listingInfo };
+          if (newObj.data) {
+            newObj.data.startAvail = listingIds[id].startDate;
+            newObj.data.endAvail = listingIds[id].endDate;
+            newObj.data.avbId = listingIds[id].avlbId;
+            newObj.data.matchPercentage = getMatchPerc(listingInfo.data.user.personalityScale);
+          }
+          return newObj.data;
+        })),
+    );
+    const avlbListings: Array<any> = await getAvlbListings()
+      .then((data) => data.filter((datum) => !!datum));
+    if (!avlbListings) {
+      setMessage('sorry :/ nothing is avail here.');
+      setAvailListings([]);
+    } else {
+      setAvailListings(avlbListings);
+    }
+  };
+
+  const getAvailListings = async () => {
     if (locationQuery) {
       const { start, end } = dateRange;
       const listingsToRender: any = {};
-      axios.get(`/availability/listings/:${start}/:${end}`)
-        .then((results) => {
-          const availableListings = results.data;
-          if (!availableListings.length) {
-            setMessage('sorry :/ nothing is avail here.');
-            setAvailListings([]);
-          } else {
-            availableListings.forEach((availBlock: any) => {
-              const { startDate, endDate } = availBlock;
-              const listingId = availBlock.listing.id;
-              if (!listingsToRender[listingId]) {
-                listingsToRender[listingId] = { startDate, endDate };
-              }
-            });
-            getAvailListingInfo(listingsToRender);
-          }
-        })
+      const availableListings = await axios.get(`/availability/listings/:${start}/:${end}`)
+        .then(({ data }) => data)
         .catch((err) => err);
+      if (!availableListings.length) {
+        setMessage('sorry :/ nothing is avail here.');
+        setAvailListings([]);
+      } else {
+        availableListings.forEach((availBlock: any) => {
+          const { startDate, endDate } = availBlock;
+          const listingId = availBlock.listing.id;
+          const avlbId = availBlock.id;
+          if (!listingsToRender[listingId]) {
+            listingsToRender[listingId] = { startDate, endDate, avlbId };
+          }
+        });
+        getAvailListingInfo(listingsToRender);
+      }
     }
   };
 
@@ -91,38 +103,31 @@ const ResultsList: React.FC<SearchProps> = ({
 
   return (
     <div className={classes.root}>
-      {message}
-      <GridList className={classes.gridList} cols={2.5}>
+      <Grid className={classes.paper} item xs={7}>
         {availListings.map((listing: {
-          id: any; user_id: any; listingTitle: any;
-          listingCity: any; listingState: any; startAvail: any;
-          endAvail: any; availabilities: any; }) => {
+          userId: number; listingId: number; avbId: number; listingTitle: string;
+          listingCity: string; listingState: string; startAvail: string;
+          endAvail: string; matchPercentage: number; listingPhoto: { url: string } }) => {
           const {
-            id, user_id: userId, listingTitle, listingCity, listingState,
-            startAvail, endAvail,
+            userId, listingId, listingTitle, listingCity, listingState,
+            startAvail, endAvail, listingPhoto, avbId, matchPercentage,
           } = listing;
-          let defaultAvail = {
-            startDate: '',
-            endDate: '',
-          };
-          if (listing.availabilities) {
-            const { availabilities } = listing;
-            [defaultAvail] = availabilities;
-          }
+          const { url } = listingPhoto;
           return (
-            <GridListTile key={id}>
-              <ResultsListEntry
-                user={userId}
-                title={listingTitle}
-                location={{ listingCity, listingState }}
-                avail={{ startAvail, endAvail }}
-                updated={updated}
-                availForDefault={defaultAvail}
-              />
-            </GridListTile>
+            <ResultsListEntry
+              user={userId}
+              listingId={listingId}
+              title={listingTitle}
+              location={{ listingCity, listingState }}
+              listingAvail={{ startAvail, endAvail }}
+              queriedDates={dateRange}
+              avbId={avbId}
+              photo={url}
+              matchPercentage={matchPercentage}
+            />
           );
         })}
-      </GridList>
+      </Grid>
     </div>
   );
 };

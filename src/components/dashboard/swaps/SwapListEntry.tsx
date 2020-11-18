@@ -1,4 +1,5 @@
 import React, { useState, useEffect, FC } from 'react';
+import { toast } from 'react-toastify';
 import axios from 'axios';
 import { SwapListEntryInterface } from 'goldilocksTypes';
 import {
@@ -8,28 +9,60 @@ import {
   Button,
   Container,
 } from '@material-ui/core';
+import { Link } from 'react-router-dom';
+import { flexibleCompare } from '@fullcalendar/react';
 
 const useStyles = makeStyles({
   main: {
-    borderStyle: 'solid',
     width: '75%',
   },
   boxStyle: {
     display: 'flex',
     justifyContent: 'center',
+    height: '200px',
+    margin: '15px 0px',
   },
   imageStyle: {
-    borderStyle: 'none solid none none',
+    width: '240px',
+    height: '170px',
+    margin: 'auto',
+    overflow: 'hidden',
+    position: 'relative',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
   },
   imgStyle: {
+    margin: 'auto',
+    display: 'block',
+    position: 'absolute',
+    objectFit: 'cover',
+    width: '80%',
     height: '100%',
-    width: '100%',
   },
   bottomBorder: {
     borderStyle: 'none none solid none',
+    borderWidth: 'thin',
+    padding: '4px',
+    flex: 0,
+  },
+  buttonGridStyle: {
+    justify: 'center',
+    alignItems: 'center',
+    height: '100%',
+  },
+  infoHolderStyle: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  outerStyle: {
+    flex: '1',
+  },
+  innerStyle: {
+    height: '100%',
+  },
+  centerStyle: {
+    display: 'flex',
+    justifyContent: 'center',
   },
 });
 
@@ -38,6 +71,9 @@ const SwapListEntry: FC<SwapListEntryInterface> = ({ swap, guestId, type }) => {
   const [swappee, setSwappee] = useState({ firstName: '' });
   const [photo, setPhoto] = useState('');
   const [address, setAddress] = useState('');
+  const [userId] = useState(localStorage.userId);
+  const [listingId, setListingId] = useState(0);
+  const [swappeeAvbId, setSwappeeAvbId] = useState(0);
 
   const approveSwap = () => {
     const params = {
@@ -45,6 +81,7 @@ const SwapListEntry: FC<SwapListEntryInterface> = ({ swap, guestId, type }) => {
       guestId,
     };
     axios.post('/availability/confirm', { params })
+      .then((result) => (result ? toast.success('Swap approved!') : toast.warn('Problem approving swap!')))
       .catch((err) => console.warn(err.message));
   };
 
@@ -54,59 +91,165 @@ const SwapListEntry: FC<SwapListEntryInterface> = ({ swap, guestId, type }) => {
       guestId,
     };
     axios.delete('/request/decline', { params })
+      .then((result) => (result ? toast.success('Swap declined!') : toast.warn('Trouble declining swap!')))
       .catch((err) => console.warn(err.message));
   };
 
   const renderInfo = () => {
     if (type === 'con') {
       return (
-        <Grid xs={12}>
-          Stuff
-          <br />
-          <br />
-          <br />
+        <Grid className={classes.outerStyle}>
+          <Container className={classes.innerStyle}>
+            <Grid
+              className={classes.buttonGridStyle}
+              container
+              direction="row"
+            >
+              <Grid item xs={12} className={classes.centerStyle}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  component={Link}
+                  to={
+                    {
+                      pathname: `/view-listing/${swap.guestId}/${swappeeAvbId}`,
+                      state: {
+                        startAvail: swap.start,
+                        endAvail: swap.end,
+                      },
+                    }
+                  }
+                >
+                  View Room!
+                </Button>
+              </Grid>
+            </Grid>
+          </Container>
+        </Grid>
+      );
+    }
+    if (type === 'complete') {
+      return (
+        <Grid className={classes.outerStyle}>
+          <Container className={classes.innerStyle}>
+            <Grid
+              className={classes.buttonGridStyle}
+              container
+              direction="row"
+            >
+              <Grid item xs={12} className={classes.centerStyle}>
+                <Button
+                  component={Link}
+                  to={
+                    {
+                      pathname: '/writeReview',
+                      state: {
+                        availabilityId: swap.id,
+                        reviewerId: userId,
+                        revieweeId: guestId,
+                      },
+                    }
+                  }
+                  variant="contained"
+                >
+                  Review Swap!
+                </Button>
+              </Grid>
+            </Grid>
+          </Container>
         </Grid>
       );
     }
     return (
-      <Container>
-        <Grid xs={12}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={approveSwap}
+      <Grid className={classes.outerStyle}>
+        <Container className={classes.innerStyle}>
+          <Grid
+            className={classes.buttonGridStyle}
+            container
+            direction="row"
           >
-            Approve Swap!
-          </Button>
-        </Grid>
-        <Grid xs={12}>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={declineSwap}
-          >
-            Decline Swap!
-          </Button>
-        </Grid>
-      </Container>
-
+            <Grid item xs={4} className={classes.centerStyle}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={approveSwap}
+              >
+                Approve Swap!
+              </Button>
+            </Grid>
+            <Grid item xs={4} className={classes.centerStyle}>
+              <Button
+                variant="contained"
+                color="primary"
+                component={Link}
+                to={
+                  {
+                    pathname: `/view-listing/${listingId}/${swap.availability_id}`,
+                    state: {
+                      startAvail: swap.start,
+                      endAvail: swap.end,
+                    },
+                  }
+                }
+              >
+                View Room!
+              </Button>
+            </Grid>
+            <Grid item xs={4} className={classes.centerStyle}>
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={declineSwap}
+              >
+                Decline Swap!
+              </Button>
+            </Grid>
+          </Grid>
+        </Container>
+      </Grid>
     );
+  };
+
+  const getRecInfo = async () => {
+    const tempListId = await axios.get(`listing/user/${guestId}`)
+      .then(({ data }) => {
+        setListingId(data.id);
+        return data.id;
+      });
+    await axios.get(`user/${guestId}`)
+      .then(({ data }) => {
+        setSwappee(data);
+      });
+    await axios.get(`listingPhotos/byListingId/${tempListId}`)
+      .then(({ data }) => {
+        setPhoto(data.url);
+      });
+    await axios.get(`listing/user/${guestId}`)
+      .then(({ data }) => {
+        setAddress(data.listingAddress);
+      });
+  };
+
+  const getAvbId = async () => {
+    const avbs = await axios.get(`availability/allAvbs/${guestId}`)
+      .then(({ data }) => data);
+    const match = avbs.filter((avb: { startDate: string; endDate: string; }) => {
+      if (avb.startDate === swap.start && avb.endDate === swap.end) {
+        console.log(avb);
+        return avb;
+      }
+      return [];
+    });
+    console.log(avbs, match);
+    setSwappeeAvbId(match.id);
   };
 
   useEffect(() => {
     if (guestId) {
-      axios.get(`user/${guestId}`)
-        .then(({ data }) => {
-          setSwappee(data);
-        });
-      axios.get(`listingPhotos/${guestId}`)
-        .then(({ data }) => {
-          setPhoto(data.url);
-        });
-      axios.get(`listing/user/${guestId}`)
-        .then(({ data }) => {
-          setAddress(data.listingAddress);
-        });
+      getRecInfo();
+    }
+    if (type === 'con') {
+      getAvbId();
     }
   }, [guestId]);
 
@@ -120,7 +263,7 @@ const SwapListEntry: FC<SwapListEntryInterface> = ({ swap, guestId, type }) => {
             className={classes.imgStyle}
           />
         </Grid>
-        <Grid xs={9}>
+        <Grid xs={9} className={classes.infoHolderStyle}>
           <Grid xs={12} className={classes.bottomBorder}>
             {`${swap.start} to ${swap.end}`}
           </Grid>

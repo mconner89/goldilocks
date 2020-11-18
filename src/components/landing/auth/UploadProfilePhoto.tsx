@@ -1,7 +1,20 @@
-import React, { useState } from 'react';
+import React, { FC } from 'react';
+import { toast } from 'react-toastify';
+import clsx from 'clsx';
 import {
-  Button, Dialog, DialogTitle, Typography, AppBar, TextField, DialogActions,
+  Button,
+  Dialog,
+  DialogTitle,
+  Typography,
+  AppBar,
+  Grid,
 } from '@material-ui/core';
+import {
+  makeStyles,
+  Theme,
+  createStyles,
+} from '@material-ui/core/styles';
+import { MyUploadPhotoProps } from 'goldilocksTypes';
 import axios from 'axios';
 
 interface MyProps {
@@ -11,7 +24,25 @@ interface MyProps {
   prevStep: () => void,
 }
 
+const useStyles = makeStyles((theme: Theme) => createStyles({
+  root: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    '& > *': {
+      margin: theme.spacing(1),
+      width: '40ch',
+    },
+  },
+  margin: {
+    margin: theme.spacing(1),
+  },
+  buttonMargin: {
+    margin: theme.spacing(2),
+  },
+}));
+
 const UploadProfilePhoto: React.FC<MyProps> = (Props: MyProps): JSX.Element => {
+  const classes = useStyles();
   const {
     nextStep,
     prevStep,
@@ -27,6 +58,7 @@ const UploadProfilePhoto: React.FC<MyProps> = (Props: MyProps): JSX.Element => {
     })
       .then(({ data }) => {
         setProfilePhotoUrl(data);
+        toast.success('Photo successfully uploaded!');
       })
       .catch((err) => console.warn(err));
   };
@@ -67,22 +99,24 @@ const UploadProfilePhoto: React.FC<MyProps> = (Props: MyProps): JSX.Element => {
           />
         </Button>
         <br />
-        <Button
-          className="question-btn"
-          onClick={(event) => continueStep(event)}
-          color="primary"
-          variant="contained"
-        >
-          Continue
-        </Button>
-        <Button
-          className="question-btn"
-          onClick={(event) => backAStep(event)}
-          color="secondary"
-          variant="contained"
-        >
-          Back
-        </Button>
+        <Grid container alignContent="center" justify="center" className={clsx(classes.margin, classes.root)}>
+          <Button
+            className={clsx(classes.buttonMargin, classes.root)}
+            onClick={(event) => continueStep(event)}
+            color="primary"
+            variant="outlined"
+          >
+            Continue
+          </Button>
+          <Button
+            className={clsx(classes.buttonMargin, classes.root)}
+            onClick={(event) => backAStep(event)}
+            color="secondary"
+            variant="outlined"
+          >
+            Back
+          </Button>
+        </Grid>
       </Dialog>
     </>
   );

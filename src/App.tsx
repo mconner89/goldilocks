@@ -8,13 +8,13 @@ import {
 } from 'react-router-dom';
 import { AppType, UserType } from 'goldilocksTypes';
 
-// theming
+// TODO: Theming
 import { MuiThemeProvider } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { toast } from 'react-toastify';
 import theme from './theme';
 
-// Components
+// TODO: Components
 import 'react-toastify/dist/ReactToastify.css';
 import SignUp from './components/landing/auth/Signup';
 import Login from './components/landing/auth/Login';
@@ -83,7 +83,7 @@ const App: FC = (): JSX.Element => {
       <div className={darkMode ? 'dark-mode' : 'light-mode'}>
         <BrowserRouter>
           {isAuth
-          && <Navbar handleLogin={[isAuth, setAuth]} toggleMode={[darkMode, setDarkMode]} />}
+            && <Navbar handleLogin={[setAuth]} toggleMode={[darkMode, setDarkMode]} />}
           <Switch>
             <Route
               exact
@@ -108,7 +108,7 @@ const App: FC = (): JSX.Element => {
               strict
               path="/dashboard"
               render={() => (isAuth ? (
-                <Dashboard handleLogin={[isAuth, setAuth]} user={user} />) : (
+                <Dashboard handleLogin={[setAuth]} user={user} />) : (
                   <Redirect to="/" />
               ))}
             />
@@ -120,7 +120,7 @@ const App: FC = (): JSX.Element => {
             />
             <Route
               exact
-              path="/view-listing/:id/:avbId/:startAvail/:endAvail"
+              path="/view-listing/:id/:avbId"
               component={() => <Listing user={user} />}
             />
             <Route

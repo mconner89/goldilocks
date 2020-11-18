@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useState, useEffect } from 'react';
 import axios from 'axios';
 import {
   Grid,
@@ -9,18 +9,20 @@ import {
 } from '@material-ui/core';
 import { ProfileSidebarInterface } from 'goldilocksTypes';
 import MessageModal from '../messages/MessageModal';
+import RadarChart from './RadarChart';
 
 const useStyles = makeStyles({
   main: {
-    border: 1,
-    borderRadius: 2,
-    borderStyle: 'solid',
+    backgroundColor: 'white',
+    margin: 'auto',
     justifyContent: 'center',
+    paddingBottom: 100,
   },
   imgStyle: {
     height: '100%',
     width: '100%',
     padding: '10px 10px 5px',
+    justifyContent: 'center',
   },
   infoStyle: {
     justifyContent: 'center',
@@ -43,6 +45,13 @@ const Sidebar: FC<ProfileSidebarInterface> = ({ host, userId }): JSX.Element => 
   const classes = useStyles();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
+  const [personalityData, setPersonalityData] = useState({
+    openness: 0,
+    conscientiousness: 0,
+    extraversion: 0,
+    agreeableness: 0,
+    neuroticism: 0,
+  });
 
   const handleOpen = () => {
     setOpen(true);
@@ -76,14 +85,34 @@ const Sidebar: FC<ProfileSidebarInterface> = ({ host, userId }): JSX.Element => 
     setMessage(e.target.value);
   };
 
+  const getPersonalityData = () => {
+    axios.get(`/user/personalityData/${host.id}`)
+      .then(({ data }) => {
+        setPersonalityData({
+          openness: data.openness,
+          conscientiousness: data.conscientiousness,
+          extraversion: data.extraversion,
+          agreeableness: data.agreeableness,
+          neuroticism: data.neuroticism,
+        });
+      })
+      .catch((err) => console.warn(err));
+  };
+
+  useEffect(() => {
+    getPersonalityData();
+  }, []);
+
   return (
     <Container className={classes.main} disableGutters>
-      <Grid item xs={12}>
-        <img
-          src={host.profilePhoto}
-          alt="Not found"
-          className={classes.imgStyle}
-        />
+      <Grid container item xs={12}>
+        <Grid container className={classes.infoStyle}>
+          <img
+            src={host.profilePhoto}
+            alt="Not found"
+            className={classes.imgStyle}
+          />
+        </Grid>
       </Grid>
       <Grid item xs={12}>
         <Container className={classes.infoStyle} disableGutters>
@@ -114,12 +143,12 @@ const Sidebar: FC<ProfileSidebarInterface> = ({ host, userId }): JSX.Element => 
           />
         </Box>
       </Grid>
-      {/* <Grid item xs={12}>
-        spotify
+      <Grid container className={classes.textStyle}>
+        {`Your match profile with ${host.firstName}`}
       </Grid>
-      <Grid item xs={12}>
-        instagram
-      </Grid> */}
+      <Grid className={classes.infoStyle}>
+        <RadarChart hostData={personalityData} hostName={host.firstName} />
+      </Grid>
     </Container>
   );
 };

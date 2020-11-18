@@ -15,6 +15,14 @@ declare module 'goldilocksTypes' {
     userBio: string,
   };
 
+  type PersonalityType = {
+    openness: number,
+    conscientiousness: number,
+    extraversion: number,
+    agreeableness: number,
+    neuroticism: number,
+  };
+
   interface UserProps {
     user: UserType,
   }
@@ -175,6 +183,11 @@ declare module 'goldilocksTypes' {
     userId: string,
   }
 
+  interface RadarChartInterface {
+    hostData: PersonalityType,
+    hostName: string,
+  }
+
   interface HostInfoInterface {
     hostId: string,
     userId: string,
@@ -193,11 +206,46 @@ declare module 'goldilocksTypes' {
   }
 
   interface ListingLocationState {
-    listingAvail: { startAvail: string, endAvail: string },
+    startAvail: string,
+    endAvail: string,
   }
 
   interface ListingLocationInterface {
-    state: ListingLocationState,
+    startAvail: string,
+    endAvail: string,
+  }
+
+  interface MyQ1Props {
+    q1: string,
+    q2: string,
+    q3: string,
+    q4: string,
+    q5: string,
+    nextStep: () => void,
+    prevStep: () => void,
+    handleResponse: (
+      e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>,
+      type: string
+    ) => void,
+  }
+
+  interface MyQ2Props {
+    q6: string,
+    q7: string,
+    q8: string,
+    q9: string,
+    q10: string,
+    nextStep: () => void,
+    prevStep: () => void,
+    handleResponse: (
+      event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>,
+      type: string
+    ) => void,
+  }
+
+  interface MyUploadPhotoProps {
+    nextStep: () => void,
+    prevStep: () => void,
   }
 }
 
@@ -220,4 +268,6 @@ module.exports = {
   ProfileInfoInterface,
   SwapListEntryInterface,
   ListingLocationInterface,
+  MyQ1Props,
+  MyQ2Props,
 };

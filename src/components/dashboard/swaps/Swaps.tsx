@@ -1,10 +1,21 @@
 import React, { useState, FC, useEffect } from 'react';
 import axios from 'axios';
-import { Container, Grid } from '@material-ui/core';
+import { Container, Grid, makeStyles } from '@material-ui/core';
 import { AppInterface, Availability } from 'goldilocksTypes';
 import SwapList from './SwapList';
 
+const useStyles = makeStyles({
+  main: {
+    paddingTop: '10px',
+    paddingBottom: '10px',
+    marginTop: '25px',
+    marginBottom: '25px',
+    backgroundColor: 'white',
+  },
+});
+
 const Swaps: FC<AppInterface> = ({ user }) => {
+  const classes = useStyles();
   const [newUser] = useState(user);
   const [accSwaps, setAccSwaps] = useState<Array<Availability>>([]);
   const [pendingSwaps, setPendingSwaps] = useState<Array<Availability>>([]);
@@ -26,7 +37,7 @@ const Swaps: FC<AppInterface> = ({ user }) => {
         tempAcc.push(entry);
       } else if (type === 'req') {
         tempPending.push(entry);
-      } else {
+      } else if (type === 'complete') {
         tempCompleted.push(entry);
       }
     });
@@ -35,29 +46,76 @@ const Swaps: FC<AppInterface> = ({ user }) => {
     setCompletedSwaps(tempCompleted);
   };
 
+  const checkConfirmed = () => {
+    if (accSwaps.length) {
+      return (
+        <Grid>
+          <Grid>
+            These swaps have been confirmed. Have fun!
+          </Grid>
+          <Grid>
+            <SwapList swaps={accSwaps} />
+          </Grid>
+        </Grid>
+      );
+    }
+    return (
+      <Grid>
+        You don&apos;t have any upcoming swaps.
+      </Grid>
+    );
+  };
+
+  const checkPending = () => {
+    if (pendingSwaps.length) {
+      return (
+        <Grid>
+          <Grid>
+            These swaps need your approval. What do you think?
+          </Grid>
+          <Grid>
+            <SwapList swaps={pendingSwaps} />
+          </Grid>
+        </Grid>
+      );
+    }
+    return (
+      <Grid>
+        You don&apos;t have any requests.
+      </Grid>
+    );
+  };
+
+  const checkReviews = () => {
+    if (completedSwaps.length) {
+      return (
+        <Grid>
+          <Grid>
+            These swaps have already happened. Please submit a review for your experience!
+          </Grid>
+          <Grid>
+            <SwapList swaps={completedSwaps} />
+          </Grid>
+        </Grid>
+      );
+    }
+    return (
+      <Grid>
+        You don&apos;t have any pending reviews.
+      </Grid>
+    );
+  };
+
   useEffect(() => {
     getCalendar();
   }, [newUser]);
 
   return (
-    <Container>
+    <Container className={classes.main}>
       {`Hello, ${user.firstName}!`}
-      <Grid>
-        These swaps have been confirmed. Have fun!
-      </Grid>
-      <Grid>
-        <SwapList swaps={accSwaps} />
-      </Grid>
-      <Grid>
-        These swaps need your approval. What do you think?
-      </Grid>
-      <Grid>
-        <SwapList swaps={pendingSwaps} />
-      </Grid>
-      <Grid>
-        These swaps have already happened. Please submit a review for your experience!
-      </Grid>
-      {/* <SwapList /> */}
+      {checkConfirmed()}
+      {checkPending()}
+      {checkReviews()}
     </Container>
   );
 };

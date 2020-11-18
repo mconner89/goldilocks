@@ -18,7 +18,7 @@ interface BulletinProps {
 
 const useStyles = makeStyles(() => createStyles({
   even: {
-    backgroundColor: 'pink',
+    backgroundColor: '#d7f94f',
     height: '270px',
     border: 'black 1px',
     paddingLeft: '15px',
@@ -26,7 +26,7 @@ const useStyles = makeStyles(() => createStyles({
     paddingTop: '9px',
   },
   odd: {
-    backgroundColor: 'white',
+    backgroundColor: '#d7f94f',
     height: '225px',
     border: 'black 1px',
     paddingLeft: '15px',
@@ -102,16 +102,17 @@ const Post: React.FC<BulletinProps> = ({
           component={Link}
           to={
             {
-              pathname: '/hostProfile',
+              pathname: '/view-hostProfile',
               state: { hostData, userId },
             }
           }
         >
           {author}
         </Typography>
+      </Grid>
+      <Grid item xs={12}>
         <Typography variant="overline">{location}</Typography>
       </Grid>
-
     </Paper>
   );
 };

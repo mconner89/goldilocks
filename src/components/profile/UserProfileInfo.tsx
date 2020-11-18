@@ -9,14 +9,13 @@ import {
   IconButton,
 } from '@material-ui/core';
 import EditIcon from '@material-ui/icons/Edit';
+import { Link } from 'react-router-dom';
 import { AppInterface } from 'goldilocksTypes';
 import EditBio from './EditBio';
 
 const useStyles = makeStyles({
   main: {
-    border: 1,
-    borderRadius: 2,
-    borderStyle: 'solid',
+    backgroundColor: 'white',
     align: 'center',
     justify: 'center',
   },
@@ -26,10 +25,7 @@ const useStyles = makeStyles({
     display: 'flex',
   },
   infoStyle: {
-    border: 1,
-    borderRadius: 2,
     position: 'relative',
-    borderStyle: 'solid',
     justifyContent: 'center',
     width: '50%',
     marginTop: '5px',
@@ -41,8 +37,8 @@ const useStyles = makeStyles({
     },
   },
   imgStyle: {
-    height: '30%',
-    width: '30%',
+    height: '50%',
+    width: '50%',
     padding: '10px 10px 5px',
   },
   overlayStyle: {
@@ -116,6 +112,29 @@ const UserProfileInfo: FC<AppInterface> = ({ user }): JSX.Element => {
     setTempBio(e.target.value);
   };
 
+  const rh = process.env.REACT_APP_HOST;
+  const rp = process.env.REACT_APP_PORT;
+
+  const uploadPhoto = (photoString: any) => {
+    axios.post(`http://${rh}:${rp}/image/addListingPhoto/${localStorage.userId}`, {
+      data: photoString,
+    })
+      .then(({ data }) => {
+        localStorage.setItem('profilePhoto', data);
+        setListingPhoto(data);
+      })
+      .catch((err) => console.warn(err));
+  };
+
+  const handleFileChange = (e: any) => {
+    const image = e.target.files[0];
+    const reader = new FileReader();
+    reader.readAsDataURL(image);
+    reader.onloadend = () => {
+      uploadPhoto(reader.result);
+    };
+  };
+
   const listingCheck = () => {
     if (!hasListing) {
       return (
@@ -123,13 +142,15 @@ const UserProfileInfo: FC<AppInterface> = ({ user }): JSX.Element => {
           <Grid className={classes.botMargStyle}>
             It looks like you haven&apos;t made a listing yet.
           </Grid>
-          <Button
-            variant="contained"
-            color="primary"
-            className={classes.botMargStyle}
-          >
-            Create a listing
-          </Button>
+          <Link to="/dashboard">
+            <Button
+              variant="contained"
+              color="primary"
+              className={classes.botMargStyle}
+            >
+              Create a listing
+            </Button>
+          </Link>
         </Container>
       );
     }
@@ -141,10 +162,16 @@ const UserProfileInfo: FC<AppInterface> = ({ user }): JSX.Element => {
           </Grid>
           <Button
             variant="contained"
+            component="label"
             color="primary"
             className={classes.botMargStyle}
           >
             Upload a photo
+            <input
+              type="file"
+              style={{ display: 'none' }}
+              onChange={(e) => handleFileChange(e)}
+            />
           </Button>
         </Container>
       );
@@ -158,7 +185,7 @@ const UserProfileInfo: FC<AppInterface> = ({ user }): JSX.Element => {
             className={classes.imgStyle}
           />
         </Grid>
-        <Grid item xs={12}>
+        {/* <Grid item xs={12}>
           <Box className={classes.buttonStyle}>
             <Button
               variant="contained"
@@ -167,7 +194,7 @@ const UserProfileInfo: FC<AppInterface> = ({ user }): JSX.Element => {
               Update your listing
             </Button>
           </Box>
-        </Grid>
+        </Grid> */}
       </>
     );
   };
